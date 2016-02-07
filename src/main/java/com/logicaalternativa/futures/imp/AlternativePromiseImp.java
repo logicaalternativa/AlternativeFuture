@@ -22,6 +22,9 @@
  */
 package com.logicaalternativa.futures.imp;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +35,7 @@ import com.logicaalternativa.futures.OnSuccesful;
 
 public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 	
-	private  Logger logger = LoggerFactory.getLogger(getClass());
+	private static Logger logger = LoggerFactory.getLogger(AlternativePromiseImp.class);
 	
 	private T value;
 	
@@ -75,7 +78,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		
 		value = val;
 				
-		execOnSuccesful( future.getOnSuccesful(), future.getOnFailure(), value );
+		execOnSuccesful( future.getOnSuccesfulQueue(), value );
 		
 	}
 
@@ -86,21 +89,76 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		
 	}	
 	
-	private void execOnFailure( OnFailure onFailure, Throwable error ) {
+	private static void execOnFailure( BlockingQueue<OnFailure> onFailureQueue, Throwable error ) {
 		
-		if ( error != null
-				&& onFailure != null ) {
+		if ( error == null ) {
 			
-			onFailure.apply(error);
+			return;
+			
+		
+		}
+		
+		while ( onFailureQueue != null
+				&& ! onFailureQueue.isEmpty() ) {
+			
+			OnFailure onFailure = takeOfQueue( onFailureQueue );
+				
+			if ( onFailure != null ) {
+				
+				executeOnFailureApply( error, onFailure );
+				
+			}
+					
 			
 		}		
 		
 	}
-	
-	private void execOnSuccesful( final OnSuccesful<T> onSuccesful, final OnFailure onFailure, final T value ) {
+
+	private void execOnSuccesful( final BlockingQueue<OnSuccesful<T>> onSuccesfulQueue, final T value ) {
 		
-		if ( value != null
-				&& onSuccesful != null ) {
+		if ( value == null ) {
+			
+			return;
+		}
+		
+		executeQueueOnSuccesful( onSuccesfulQueue, value );
+		
+	}
+	
+	private void executeQueueOnSuccesful(
+			final BlockingQueue<OnSuccesful<T>> onSuccesfulQueue, final T value) {
+		
+		while ( onSuccesfulQueue != null
+				&& ! onSuccesfulQueue.isEmpty() ) {
+			
+			OnSuccesful<T> onSuccesful;
+			
+			onSuccesful = takeOfQueue( onSuccesfulQueue );
+				
+			if ( onSuccesful != null ) {
+				
+				executeOnsucessfulApply( onSuccesful, value);
+				
+			}
+			
+		}
+	}
+	
+	private static void executeOnFailureApply(final Throwable error, final OnFailure onFailure) {
+		try {
+			
+			onFailure.apply(  error );
+			
+		} catch (Exception e) {
+			
+			logger.error("Error to execute OnFailure", e);
+			
+		}
+		
+	}
+
+	private void executeOnsucessfulApply (
+			final OnSuccesful<T> onSuccesful, final T value) {
 			
 			try {
 				
@@ -112,45 +170,79 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 				
 			}
 			
+	}
+	
+	private static <E> E takeOfQueue( BlockingQueue<E> queue ) {
+		
+		E take = null;
+		
+		try {
+			
+			take = queue.take();
+			
+		} catch (InterruptedException e) {
+			
+			logger.error("Error to take of queue", e);
+		}
+		
+		return take;
+		
+	}
+	
+	private <E> void putOnQueue( BlockingQueue<E> queue, E element ) {
+		
+		try {
+			
+			queue.put(element);
+			
+		} catch (InterruptedException e) {
+			
+			logger.error("Error to put the value in the queue");
 		}
 		
 		
 	}
 	
 	
-	public class AlternativeFutureImp implements AlternativeFuture<T> {
+	private class AlternativeFutureImp implements AlternativeFuture<T> {
 		
-		private OnSuccesful<T> onSuccesful;
+		private BlockingQueue<OnSuccesful<T>> onSuccesfulQueue;
 	
-		private OnFailure onFailure;
+		private BlockingQueue<OnFailure> onFailureQueue;
+
+		public AlternativeFutureImp() {
+			super();
+			onSuccesfulQueue = new LinkedBlockingQueue<OnSuccesful<T>>();
+			onFailureQueue = new LinkedBlockingQueue<OnFailure>();
+		}
 
 		@Override
 		public void onSuccesful(OnSuccesful<T> function) {
 			
-			onSuccesful = function;
-			
-			execOnSuccesful( onSuccesful, onFailure, value );
+			putOnQueue(onSuccesfulQueue, function );
+
+			execOnSuccesful(onSuccesfulQueue, value);
+
 			
 		}
-
 		@Override
 		public void onFailure( OnFailure function ) {
 			
-			onFailure = function;
+			putOnQueue(onFailureQueue, function );
 			
-			execOnFailure( onFailure, error );
+			execOnFailure( onFailureQueue, error );
 			
 		}
 		
-		protected OnSuccesful<T> getOnSuccesful() {
+		protected BlockingQueue<OnSuccesful<T>> getOnSuccesfulQueue() {
 			
-			return onSuccesful;
+			return onSuccesfulQueue;
 		
 		}
 
-		protected OnFailure getOnFailure() {
+		protected BlockingQueue<OnFailure> getOnFailure() {
 			
-			return onFailure;
+			return onFailureQueue;
 		
 		}
 		

@@ -25,6 +25,10 @@ package com.logicaalternativa.futures.imp;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -53,6 +57,64 @@ public class AlternativePromiseImpTest {
 		promise.resolve(expected);	
 		
 	}
+	
+	@Test
+	public void resolveSyncSeveralOnSucceesful() throws InterruptedException {
+		
+		// GIVEN
+		
+		final AlternativeFuture<String> future = promise.future();
+		
+		final String expected = "Hello world!";
+		
+		final AtomicInteger count = new AtomicInteger(0);
+		
+		int numOnSuccesful = 3;
+		
+		// WHEN
+		
+		assignOnSuccesfulSeveralTimes(future, expected, count, numOnSuccesful);	
+		
+		promise.resolve(expected);
+		
+		// THEN
+		
+		Thread.sleep( 100 );
+		
+		assertEquals( numOnSuccesful, count.get() );
+		
+	}
+	
+	
+	@Test
+	public void resolveASyncSeveralOnSucceesfulResole() throws InterruptedException {
+		
+		// GIVEN
+		
+		final AlternativeFuture<String> future = promise.future();
+		
+		final String expected = "Hello world!";
+		
+		final AtomicInteger count = new AtomicInteger(0);
+		
+		final Integer numOnSuccesful = 3;
+		
+		ExecutorService executor = Executors.newCachedThreadPool();
+
+		// WHEN
+		
+		executor.execute( () -> assignOnSuccesfulSeveralTimes(future, expected, count, numOnSuccesful) );
+		
+		executor.execute( () -> promise.resolve(expected) );
+		
+		// THEN		
+		
+		Thread.sleep( 350 );
+		
+		assertEquals( numOnSuccesful.intValue(), count.get() );
+		
+	}
+	
 	
 	@Test
 	public void resolveASync() throws InterruptedException {
@@ -87,6 +149,29 @@ public class AlternativePromiseImpTest {
 		future.onFailure(s -> assertEquals(expected, s));
 		
 		promise.reject(expected);	
+		
+	}
+	
+
+	
+	@Test
+	public void rejectSeveralSync() throws InterruptedException {
+		
+		final AlternativeFuture<String> future = promise.future();
+		
+		final Exception expected = new Exception("Hello world!");
+		
+		final Integer numOnFailure = 3;
+		
+		final AtomicInteger count = new AtomicInteger(0);
+		
+		assignOnFailureSeveralTimes(future, expected, numOnFailure, count);
+		
+		promise.reject(expected);
+		
+		Thread.sleep( 100 );
+		
+		assertEquals( numOnFailure.intValue(), count.get() );
 		
 	}
 	
@@ -149,7 +234,7 @@ public class AlternativePromiseImpTest {
 	}
 	
 	@Test
-	public void ifResolveRejectSholdThrowException()  {
+	public void ifResolveRejectShouldThrowException()  {
 		
 		try {
 			
@@ -166,7 +251,7 @@ public class AlternativePromiseImpTest {
 	}
 	
 	@Test
-	public void ifRejectResolveSholdThrowException()  {
+	public void ifRejectResolveShouldThrowException()  {
 		
 		try {
 			
@@ -178,6 +263,30 @@ public class AlternativePromiseImpTest {
 		} catch (IllegalStateException e) {
 			
 			assertEquals( "The promise is already resolved", e.getMessage() );
+		}
+		
+	}
+	
+
+
+	private void assignOnSuccesfulSeveralTimes(final AlternativeFuture<String> future,
+			final String expected, final AtomicInteger count, int numOnSuccesful) {
+		for ( int i =0 ;i<numOnSuccesful; i++ ) {
+			
+			future.onSuccesful(s -> { assertEquals(expected, s); count.incrementAndGet(); } );
+		
+		}
+		
+	}
+
+	private void assignOnFailureSeveralTimes(final AlternativeFuture<String> future,
+			final Exception expected, final Integer numOnFailure,
+			final AtomicInteger count) {
+		
+		for ( int i = 0 ;i < numOnFailure; i++ ) {
+					
+			future.onFailure(s -> { assertEquals(expected, s); count.incrementAndGet(); } );
+				
 		}
 		
 	}
