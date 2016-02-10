@@ -1,5 +1,5 @@
 /*
- * OnSuccesful.java
+ * FunctionApply.java
  * 
  * Copyright 2016 Miguel Rafael Esteban Martin <miguel.esteban@logicaalternativa.com>
  * 
@@ -20,10 +20,12 @@
  * 
  * 
  */
+
 package com.logicaalternativa.futures;
 
-public interface OnSuccesful<T> {
+public interface FunctionApply<T> {
 	
 	public abstract void apply( T result );
 
+	
 }

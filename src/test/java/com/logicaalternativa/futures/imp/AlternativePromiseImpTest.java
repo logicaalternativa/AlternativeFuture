@@ -22,39 +22,69 @@
  */
 package com.logicaalternativa.futures.imp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
+import com.logicaalternativa.futures.FunctionApply;
 
 public class AlternativePromiseImpTest {
 	
-	AlternativePromise<String> promise;
+	private static Logger logger = LoggerFactory.getLogger(AlternativePromiseImp.class);
+	
+	private AlternativePromise<String> promise;
+	
+	private ExecutorService executorService;
+	
+	private String threadName;
+	
+	private AtomicBoolean isCallingCallback; 
 	
 	@Before
 	public void setUp(){
 		
+		executorService = Executors.newCachedThreadPool();
+		
 		promise = new AlternativePromiseImp<String>();
+
+		threadName = Thread.currentThread().getName();
+		
+		isCallingCallback = new AtomicBoolean( false );
 	}
 
 	@Test
-	public void resolveSync() {
+	public void resolveSync() throws InterruptedException {
+		
+		// GIVEN
+		
 		
 		final AlternativeFuture<String> future = promise.future();
 		
 		final String expected = "Hello world!";
 		
-		future.onSuccesful(s -> assertEquals(expected, s));
+		future.onSuccesful(
+				lamdaCheck(expected, threadName, isCallingCallback), 
+				executorService );
+		
+		// WHEN
 		
 		promise.resolve(expected);	
+		
+		// THEN
+		
+		Thread.sleep( 200 );
+		
+		assertTrue( isCallingCallback.get() );
 		
 	}
 	
@@ -87,7 +117,7 @@ public class AlternativePromiseImpTest {
 	
 	
 	@Test
-	public void resolveASyncSeveralOnSucceesfulResole() throws InterruptedException {
+	public void resolveASyncSeveralOnSucceesfulResolve() throws InterruptedException {
 		
 		// GIVEN
 		
@@ -119,36 +149,53 @@ public class AlternativePromiseImpTest {
 	@Test
 	public void resolveASync() throws InterruptedException {
 		
+		// GIVEN
+		
 		final AlternativeFuture<String> future = promise.future();
 		
 		final String expected = "Hello world!";
 		
-		future.onSuccesful(s -> assertEquals(expected, s));
+		future.onSuccesful(
+				lamdaCheck(expected, threadName, isCallingCallback), 
+				executorService );
+		// WHEN
 		
 		(new Thread(){
 
 			@Override
 			public void run() {
 				promise.resolve(expected);	
-			}
-			
+			}			
 			
 		}).start();
 		
-		Thread.sleep(100);
+		// THEN
+		
+		Thread.sleep(200);
+		
+		assertTrue( isCallingCallback.get() );
 		
 	}
 		
 	@Test
-	public void rejectSync() {
+	public void rejectSync() throws InterruptedException {
 		
 		final AlternativeFuture<String> future = promise.future();
 		
 		final Exception expected = new Exception("Hello world!");
 		
-		future.onFailure(s -> assertEquals(expected, s));
+		future.onFailure(
+				lamdaCheck(expected, threadName, isCallingCallback), 
+				executorService );
 		
-		promise.reject(expected);	
+		promise.reject(expected);		
+		
+		// THEN
+		
+		Thread.sleep(200);
+		
+		assertTrue( isCallingCallback.get() );
+		
 		
 	}
 	
@@ -182,10 +229,12 @@ public class AlternativePromiseImpTest {
 		
 		final Exception expected = new Exception("Hello world!");
 		
-		future.onFailure(s -> assertEquals(expected, s));
+		future.onFailure(
+				lamdaCheck(expected, threadName, isCallingCallback), 
+				executorService );
 		
 		(new Thread(){
-
+			
 			@Override
 			public void run() {
 				promise.reject(expected);	
@@ -194,7 +243,11 @@ public class AlternativePromiseImpTest {
 			
 		}).start();
 		
-		Thread.sleep(100);	
+		// THEN
+		
+		Thread.sleep(200);
+		
+		assertTrue( isCallingCallback.get() );
 		
 	}
 	
@@ -271,9 +324,10 @@ public class AlternativePromiseImpTest {
 
 	private void assignOnSuccesfulSeveralTimes(final AlternativeFuture<String> future,
 			final String expected, final AtomicInteger count, int numOnSuccesful) {
+		
 		for ( int i =0 ;i<numOnSuccesful; i++ ) {
 			
-			future.onSuccesful(s -> { assertEquals(expected, s); count.incrementAndGet(); } );
+			future.onSuccesful(s ->  count.incrementAndGet() , executorService);
 		
 		}
 		
@@ -285,9 +339,34 @@ public class AlternativePromiseImpTest {
 		
 		for ( int i = 0 ;i < numOnFailure; i++ ) {
 					
-			future.onFailure(s -> { assertEquals(expected, s); count.incrementAndGet(); } );
+			future.onFailure(s -> count.incrementAndGet(), executorService );
 				
 		}
+		
+	}
+
+	private static <E> FunctionApply<E> lamdaCheck(final E expected,
+			final String threadName, final AtomicBoolean isCallingCallback) {
+		
+		return s -> { 
+			
+			logValue(" Value ", expected, s);
+			
+			final String nameCurrent = Thread.currentThread().getName();
+			logValue(" Thread name ", threadName, nameCurrent);
+			
+			boolean res = expected.equals( s )
+								&& ! threadName.equals(nameCurrent);
+			
+			isCallingCallback.set(res);
+			
+		};
+		
+	}
+	
+	private static void logValue ( final String description, final Object expected, final Object actual ) {
+		
+		logger.info( description + ": expected [" + expected + "] -> actual [" + actual + "]" );
 		
 	}
 	

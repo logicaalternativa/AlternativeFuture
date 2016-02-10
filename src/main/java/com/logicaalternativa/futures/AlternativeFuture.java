@@ -22,10 +22,12 @@
  */
 package com.logicaalternativa.futures;
 
+import java.util.concurrent.ExecutorService;
+
 public interface AlternativeFuture<T> {
 	
-	public abstract void onSuccesful( OnSuccesful<T> function );
+	public abstract void onSuccesful( final FunctionApply<T> function, final ExecutorService executorService );
 	
-	public abstract void onFailure ( OnFailure function );
+	public abstract void onFailure ( final FunctionApply<Throwable> function, final ExecutorService executorService );
 
 }

@@ -23,6 +23,7 @@
 package com.logicaalternativa.futures.imp;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.slf4j.Logger;
@@ -30,8 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
-import com.logicaalternativa.futures.OnFailure;
-import com.logicaalternativa.futures.OnSuccesful;
+import com.logicaalternativa.futures.FunctionApply;
 
 public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 	
@@ -56,7 +56,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		
 		error = err;
 		
-		execOnFailure( future.getOnFailure(), err );
+		execQueue( future.getOnFailure(), err );
 		
 	}
 
@@ -78,7 +78,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		
 		value = val;
 				
-		execOnSuccesful( future.getOnSuccesfulQueue(), value );
+		execQueue( future.getOnSuccesfulQueue(), value );
 		
 	}
 
@@ -89,86 +89,56 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		
 	}	
 	
-	private static void execOnFailure( BlockingQueue<OnFailure> onFailureQueue, Throwable error ) {
-		
-		if ( error == null ) {
-			
-			return;
-			
-		
-		}
-		
-		while ( onFailureQueue != null
-				&& ! onFailureQueue.isEmpty() ) {
-			
-			OnFailure onFailure = takeOfQueue( onFailureQueue );
-				
-			if ( onFailure != null ) {
-				
-				executeOnFailureApply( error, onFailure );
-				
-			}
-					
-			
-		}		
-		
-	}
+	
 
-	private void execOnSuccesful( final BlockingQueue<OnSuccesful<T>> onSuccesfulQueue, final T value ) {
+	private static <E> void execQueue( final BlockingQueue<FunctionExecutorPojo<FunctionApply<E>>> fucntionQueue, final E value ) {
 		
 		if ( value == null ) {
 			
 			return;
 		}
 		
-		executeQueueOnSuccesful( onSuccesfulQueue, value );
+		executeQueue( fucntionQueue, value );
 		
 	}
 	
-	private void executeQueueOnSuccesful(
-			final BlockingQueue<OnSuccesful<T>> onSuccesfulQueue, final T value) {
+	private static <E>  void executeQueue(
+			final BlockingQueue<FunctionExecutorPojo<FunctionApply<E>>> onSuccesfulQueue, final E value) {
 		
 		while ( onSuccesfulQueue != null
 				&& ! onSuccesfulQueue.isEmpty() ) {
 			
-			OnSuccesful<T> onSuccesful;
-			
-			onSuccesful = takeOfQueue( onSuccesfulQueue );
+			FunctionExecutorPojo<FunctionApply<E>> fuctionPojo = takeOfQueue( onSuccesfulQueue );
 				
-			if ( onSuccesful != null ) {
+			if ( fuctionPojo != null ) {
 				
-				executeOnsucessfulApply( onSuccesful, value);
+				executeFucntionApply( fuctionPojo.getFunction(), value, fuctionPojo.getExecutorService());
 				
 			}
 			
 		}
 	}
 	
-	private static void executeOnFailureApply(final Throwable error, final OnFailure onFailure) {
-		try {
-			
-			onFailure.apply(  error );
-			
-		} catch (Exception e) {
-			
-			logger.error("Error to execute OnFailure", e);
-			
-		}
+	private static <E> void executeFucntionApply (
+			final FunctionApply<E> functionApply, final E value, ExecutorService executorService) {
 		
-	}
-
-	private void executeOnsucessfulApply (
-			final OnSuccesful<T> onSuccesful, final T value) {
+		
+			executorService.execute( () -> {
+		
+				try {
+					
+					functionApply.apply(value);
+					
+				} catch (Exception e) {
+					
+					logger.error("Error to execute FunctionApply", e);
+					
+				}
+				
+			});
+		
 			
-			try {
-				
-				onSuccesful.apply(value);
-				
-			} catch (Exception e) {
-				
-				logger.error("Error to execute OnSuccessful", e);
-				
-			}
+			
 			
 	}
 	
@@ -189,62 +159,96 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		
 	}
 	
-	private <E> void putOnQueue( BlockingQueue<E> queue, E element ) {
+	private static <E> void putOnQueue( BlockingQueue<FunctionExecutorPojo<E>> queue, E element, final ExecutorService executorService) {
 		
 		try {
 			
-			queue.put(element);
+			final FunctionExecutorPojo<E> functionExecutorPojo = new FunctionExecutorPojoImp<E>(element, executorService);
+			
+			queue.put(functionExecutorPojo);
 			
 		} catch (InterruptedException e) {
 			
 			logger.error("Error to put the value in the queue");
-		}
-		
+		}	
 		
 	}
 	
 	
 	private class AlternativeFutureImp implements AlternativeFuture<T> {
 		
-		private BlockingQueue<OnSuccesful<T>> onSuccesfulQueue;
+		private BlockingQueue<FunctionExecutorPojo<FunctionApply<T>>> onSuccesfulQueue;
 	
-		private BlockingQueue<OnFailure> onFailureQueue;
-
+		private BlockingQueue<FunctionExecutorPojo<FunctionApply<Throwable>>> onFailureQueue;
+		
 		public AlternativeFutureImp() {
 			super();
-			onSuccesfulQueue = new LinkedBlockingQueue<OnSuccesful<T>>();
-			onFailureQueue = new LinkedBlockingQueue<OnFailure>();
+			onSuccesfulQueue = new LinkedBlockingQueue<FunctionExecutorPojo<FunctionApply<T>>>();
+			onFailureQueue = new LinkedBlockingQueue<FunctionExecutorPojo<FunctionApply<Throwable>>>();
 		}
 
 		@Override
-		public void onSuccesful(OnSuccesful<T> function) {
+		public void onSuccesful(final FunctionApply<T> function, final ExecutorService executorService) {
 			
-			putOnQueue(onSuccesfulQueue, function );
+			putOnQueue(onSuccesfulQueue, function, executorService );
 
-			execOnSuccesful(onSuccesfulQueue, value);
-
-			
-		}
-		@Override
-		public void onFailure( OnFailure function ) {
-			
-			putOnQueue(onFailureQueue, function );
-			
-			execOnFailure( onFailureQueue, error );
+			execQueue(onSuccesfulQueue, value);
 			
 		}
 		
-		protected BlockingQueue<OnSuccesful<T>> getOnSuccesfulQueue() {
+		@Override
+		public void onFailure(FunctionApply<Throwable>  function, ExecutorService executorService ) {
+			
+			putOnQueue(onFailureQueue, function, executorService);
+			
+			execQueue(onFailureQueue, error);
+			
+		}
+		
+		protected BlockingQueue<FunctionExecutorPojo<FunctionApply<T>>> getOnSuccesfulQueue() {
 			
 			return onSuccesfulQueue;
 		
 		}
 
-		protected BlockingQueue<OnFailure> getOnFailure() {
+		protected BlockingQueue<FunctionExecutorPojo<FunctionApply<Throwable>>> getOnFailure() {
 			
 			return onFailureQueue;
 		
 		}
+		
+	}
+	
+	private static class FunctionExecutorPojoImp<E> implements FunctionExecutorPojo<E> {
+
+		private E function;
+		
+		private ExecutorService executorService;
+		
+		@Override
+		public E getFunction() {
+			return function;
+		}
+
+		@Override
+		public ExecutorService getExecutorService() {
+			return executorService;
+		}
+
+		public FunctionExecutorPojoImp(E function,
+				ExecutorService executorService) {
+			super();
+			this.function = function;
+			this.executorService = executorService;
+		}
+		
+	}
+	
+	private static interface FunctionExecutorPojo<E> {
+		
+		E getFunction();
+		
+		ExecutorService getExecutorService();		
 		
 	}
 
