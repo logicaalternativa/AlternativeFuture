@@ -25,45 +25,59 @@ package com.logicaalternativa.futures.imp;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
 import com.logicaalternativa.futures.FunctionApply;
+import com.logicaalternativa.futures.util.FunctionExecutorPojo;
+import com.logicaalternativa.futures.util.IExecQueue;
+import com.logicaalternativa.futures.util.IManageQueue;
+import com.logicaalternativa.futures.util.imp.ExecQueue;
+import com.logicaalternativa.futures.util.imp.ManageQueue;
 
 public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 	
-	private static Logger logger = LoggerFactory.getLogger(AlternativePromiseImp.class);
-	
 	private T value;
+	
+	private AtomicBoolean isAlreadySetValue;
 	
 	private Throwable error;
 	
 	private AlternativeFutureImp future;
 	
+	private IManageQueue iManageQueue;
+	
+	private IExecQueue iExecQueue;
+	
 	public AlternativePromiseImp() {
 		
 		future = new AlternativeFutureImp();
 		
+		iManageQueue = ManageQueue.getInstance();
+		
+		iExecQueue = ExecQueue.getInstance();
+		
+		isAlreadySetValue = new AtomicBoolean( false );
+		
 	}
 
 	@Override
-	public synchronized void reject(Throwable err) {
+	public void reject(Throwable err) {
 		
-		validatePromiseIsResovedYet();
+		setAndvalidatePromiseIsResovedYet();
 		
 		error = err;
 		
-		execQueue( future.getOnFailure(), err );
+		execQueue( future.getOnFailure(), err, true );
 		
 	}
 
-	private void validatePromiseIsResovedYet() {
+	private void setAndvalidatePromiseIsResovedYet() {
 		
-		if ( error != null
-				|| value != null ) {
+		boolean isAlready = isAlreadySetValue.getAndSet( true );
+		
+		if ( isAlready ) {
 			
 			throw new IllegalStateException("The promise is already resolved");
 			
@@ -72,13 +86,13 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 	}
 
 	@Override
-	public synchronized void resolve(T val) {
+	public void resolve(T val) {
 		
-		validatePromiseIsResovedYet();
+		setAndvalidatePromiseIsResovedYet();
 		
 		value = val;
 				
-		execQueue( future.getOnSuccesfulQueue(), value );
+		execQueue( future.getOnSuccesfulQueue(), value, true );
 		
 	}
 
@@ -88,91 +102,17 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		return future;
 		
 	}	
-	
-	
 
-	private static <E> void execQueue( final BlockingQueue<FunctionExecutorPojo<FunctionApply<E>>> fucntionQueue, final E value ) {
+	private <E> void execQueue( final BlockingQueue<FunctionExecutorPojo<FunctionApply<E>>> fucntionQueue, final E value, boolean isAlreadySetValue ) {
 		
-		if ( value == null ) {
+		if ( ! isAlreadySetValue ) {
 			
 			return;
 		}
 		
-		executeQueue( fucntionQueue, value );
+		iExecQueue.executeQueue( fucntionQueue, value, iManageQueue );
 		
-	}
-	
-	private static <E>  void executeQueue(
-			final BlockingQueue<FunctionExecutorPojo<FunctionApply<E>>> onSuccesfulQueue, final E value) {
-		
-		while ( onSuccesfulQueue != null
-				&& ! onSuccesfulQueue.isEmpty() ) {
-			
-			FunctionExecutorPojo<FunctionApply<E>> fuctionPojo = takeOfQueue( onSuccesfulQueue );
-				
-			if ( fuctionPojo != null ) {
-				
-				executeFucntionApply( fuctionPojo.getFunction(), value, fuctionPojo.getExecutorService());
-				
-			}
-			
-		}
-	}
-	
-	private static <E> void executeFucntionApply (
-			final FunctionApply<E> functionApply, final E value, ExecutorService executorService) {
-		
-		
-			executorService.execute( () -> {
-		
-				try {
-					
-					functionApply.apply(value);
-					
-				} catch (Exception e) {
-					
-					logger.error("Error to execute FunctionApply", e);
-					
-				}
-				
-			});
-		
-			
-			
-			
-	}
-	
-	private static <E> E takeOfQueue( BlockingQueue<E> queue ) {
-		
-		E take = null;
-		
-		try {
-			
-			take = queue.take();
-			
-		} catch (InterruptedException e) {
-			
-			logger.error("Error to take of queue", e);
-		}
-		
-		return take;
-		
-	}
-	
-	private static <E> void putOnQueue( BlockingQueue<FunctionExecutorPojo<E>> queue, E element, final ExecutorService executorService) {
-		
-		try {
-			
-			final FunctionExecutorPojo<E> functionExecutorPojo = new FunctionExecutorPojoImp<E>(element, executorService);
-			
-			queue.put(functionExecutorPojo);
-			
-		} catch (InterruptedException e) {
-			
-			logger.error("Error to put the value in the queue");
-		}	
-		
-	}
+	}	
 	
 	
 	private class AlternativeFutureImp implements AlternativeFuture<T> {
@@ -190,18 +130,18 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		@Override
 		public void onSuccesful(final FunctionApply<T> function, final ExecutorService executorService) {
 			
-			putOnQueue(onSuccesfulQueue, function, executorService );
+			iManageQueue.putOnQueue(onSuccesfulQueue, function, executorService );
 
-			execQueue(onSuccesfulQueue, value);
+			execQueue(onSuccesfulQueue, value, isAlreadySetValue.get());
 			
 		}
 		
 		@Override
 		public void onFailure(FunctionApply<Throwable>  function, ExecutorService executorService ) {
 			
-			putOnQueue(onFailureQueue, function, executorService);
+			iManageQueue.putOnQueue( onFailureQueue, function, executorService );
 			
-			execQueue(onFailureQueue, error);
+			execQueue( onFailureQueue, error, isAlreadySetValue.get() );
 			
 		}
 		
@@ -216,39 +156,6 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 			return onFailureQueue;
 		
 		}
-		
-	}
-	
-	private static class FunctionExecutorPojoImp<E> implements FunctionExecutorPojo<E> {
-
-		private E function;
-		
-		private ExecutorService executorService;
-		
-		@Override
-		public E getFunction() {
-			return function;
-		}
-
-		@Override
-		public ExecutorService getExecutorService() {
-			return executorService;
-		}
-
-		public FunctionExecutorPojoImp(E function,
-				ExecutorService executorService) {
-			super();
-			this.function = function;
-			this.executorService = executorService;
-		}
-		
-	}
-	
-	private static interface FunctionExecutorPojo<E> {
-		
-		E getFunction();
-		
-		ExecutorService getExecutorService();		
 		
 	}
 
