@@ -1,5 +1,5 @@
 /*
- * AlternativeFuture.java
+ * AlternativeFutures.java
  * 
  * Copyright 2016 Miguel Rafael Esteban Martin <miguel.esteban@logicaalternativa.com>
  * 
@@ -20,15 +20,37 @@
  * 
  * 
  */
-package com.logicaalternativa.futures;
+package com.logicaalternativa.futures.imp;
 
-import java.util.concurrent.ExecutorService;
+import com.logicaalternativa.futures.AlternativeFuture;
+import com.logicaalternativa.futures.AlternativePromise;
 
-public interface AlternativeFuture<T> {
+public class AlternativeFutures {
 	
-	abstract void onSuccesful( final FunctionCallBack<T> function, final ExecutorService executorService );
+	public static <T> AlternativePromise<T> createPromise() {
+		
+		return new AlternativePromiseImp<T>();
+		
+	}
 	
-	abstract void onFailure ( final FunctionCallBack<Throwable> function, final ExecutorService executorService );
+	public static <T> AlternativeFuture<T> successful( T value ) {
+		
+		AlternativePromise<T> promise = createPromise();
+		
+		promise.resolve( value );
+		
+		return promise.future();
+		
+	}
+	
+	public static <T> AlternativeFuture<T> failed( Throwable error ) {
+		
+		AlternativePromise<T> promise = createPromise();
+		
+		promise.reject( error );
+		
+		return promise.future();
+		
+	}
 
-	abstract <U> AlternativeFuture<U> map( final FunctionMapper<T, U> mapper, final ExecutorService executorService );
 }

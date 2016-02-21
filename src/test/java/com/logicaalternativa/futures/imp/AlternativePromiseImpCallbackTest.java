@@ -1,5 +1,5 @@
 /*
- * AlternativePromiseImpTest.java
+ * AlternativePromiseImpCallbackTest.java
  * 
  * Copyright 2016 Miguel Rafael Esteban Martin <miguel.esteban@logicaalternativa.com>
  * 
@@ -36,9 +36,9 @@ import org.slf4j.LoggerFactory;
 
 import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
-import com.logicaalternativa.futures.FunctionApply;
+import com.logicaalternativa.futures.FunctionCallBack;
 
-public class AlternativePromiseImpTest {
+public class AlternativePromiseImpCallbackTest {
 	
 	private static Logger logger = LoggerFactory.getLogger(AlternativePromiseImp.class);
 	
@@ -55,7 +55,7 @@ public class AlternativePromiseImpTest {
 		
 		executorService = Executors.newCachedThreadPool();
 		
-		promise = new AlternativePromiseImp<String>();
+		promise = AlternativeFutures.createPromise();
 
 		threadName = Thread.currentThread().getName();
 		
@@ -345,7 +345,7 @@ public class AlternativePromiseImpTest {
 		
 	}
 
-	private static <E> FunctionApply<E> lamdaCheck(final E expected,
+	private static <E> FunctionCallBack<E> lamdaCheck(final E expected,
 			final String threadName, final AtomicBoolean isCallingCallback) {
 		
 		return s -> { 

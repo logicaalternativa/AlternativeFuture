@@ -1,5 +1,5 @@
 /*
- * FunctionApply.java
+ * FunctionCallBack.java
  * 
  * Copyright 2016 Miguel Rafael Esteban Martin <miguel.esteban@logicaalternativa.com>
  * 
@@ -23,9 +23,9 @@
 
 package com.logicaalternativa.futures;
 
-public interface FunctionApply<T> {
+public interface FunctionCallBack<T> {
 	
-	public abstract void apply( T result );
+	abstract void apply( T result );
 
 	
 }

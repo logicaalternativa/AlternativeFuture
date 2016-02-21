@@ -29,7 +29,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
-import com.logicaalternativa.futures.FunctionApply;
+import com.logicaalternativa.futures.FunctionCallBack;
+import com.logicaalternativa.futures.FunctionMapper;
 import com.logicaalternativa.futures.util.FunctionExecutorPojo;
 import com.logicaalternativa.futures.util.IExecQueue;
 import com.logicaalternativa.futures.util.IManageQueue;
@@ -40,9 +41,13 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 	
 	private T value;
 	
+	private AtomicBoolean isResolve;
+	
 	private AtomicBoolean isAlreadySetValue;
 	
 	private Throwable error;
+	
+	private AtomicBoolean isReject;
 	
 	private AlternativeFutureImp future;
 	
@@ -60,6 +65,10 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		
 		isAlreadySetValue = new AtomicBoolean( false );
 		
+		isResolve = new AtomicBoolean( false );
+		
+		isReject = new AtomicBoolean( false );
+		
 	}
 
 	@Override
@@ -68,6 +77,8 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		setAndvalidatePromiseIsResovedYet();
 		
 		error = err;
+		
+		isReject.set( true);
 		
 		execQueue( future.getOnFailure(), err, true );
 		
@@ -92,6 +103,8 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		
 		value = val;
 				
+		isResolve.set( true);
+		
 		execQueue( future.getOnSuccesfulQueue(), value, true );
 		
 	}
@@ -103,7 +116,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		
 	}	
 
-	private <E> void execQueue( final BlockingQueue<FunctionExecutorPojo<FunctionApply<E>>> fucntionQueue, final E value, boolean isAlreadySetValue ) {
+	private <E> void execQueue( final BlockingQueue<FunctionExecutorPojo<FunctionCallBack<E>>> fucntionQueue, final E value, boolean isAlreadySetValue ) {
 		
 		if ( ! isAlreadySetValue ) {
 			
@@ -117,41 +130,55 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 	
 	private class AlternativeFutureImp implements AlternativeFuture<T> {
 		
-		private BlockingQueue<FunctionExecutorPojo<FunctionApply<T>>> onSuccesfulQueue;
+		private BlockingQueue<FunctionExecutorPojo<FunctionCallBack<T>>> onSuccesfulQueue;
 	
-		private BlockingQueue<FunctionExecutorPojo<FunctionApply<Throwable>>> onFailureQueue;
+		private BlockingQueue<FunctionExecutorPojo<FunctionCallBack<Throwable>>> onFailureQueue;
 		
 		public AlternativeFutureImp() {
 			super();
-			onSuccesfulQueue = new LinkedBlockingQueue<FunctionExecutorPojo<FunctionApply<T>>>();
-			onFailureQueue = new LinkedBlockingQueue<FunctionExecutorPojo<FunctionApply<Throwable>>>();
+			onSuccesfulQueue = new LinkedBlockingQueue<FunctionExecutorPojo<FunctionCallBack<T>>>();
+			onFailureQueue = new LinkedBlockingQueue<FunctionExecutorPojo<FunctionCallBack<Throwable>>>();
 		}
 
 		@Override
-		public void onSuccesful(final FunctionApply<T> function, final ExecutorService executorService) {
+		public void onSuccesful(final FunctionCallBack<T> function, final ExecutorService executorService) {
 			
 			iManageQueue.putOnQueue(onSuccesfulQueue, function, executorService );
 
-			execQueue(onSuccesfulQueue, value, isAlreadySetValue.get());
+			execQueue(onSuccesfulQueue, value, isResolve.get());
 			
 		}
 		
 		@Override
-		public void onFailure(FunctionApply<Throwable>  function, ExecutorService executorService ) {
+		public void onFailure(FunctionCallBack<Throwable>  function, ExecutorService executorService ) {
 			
 			iManageQueue.putOnQueue( onFailureQueue, function, executorService );
 			
-			execQueue( onFailureQueue, error, isAlreadySetValue.get() );
+			execQueue( onFailureQueue, error, isReject.get() );
 			
+			
+		}		
+
+		@Override
+		public <U> AlternativeFuture<U> map(FunctionMapper<T, U> mapper,
+				ExecutorService executorService) {
+			
+			AlternativePromise<U> promise = AlternativeFutures.createPromise();
+			
+			onSuccesful( s -> promise.resolve( mapper.map( s ) ), executorService );
+			
+			onFailure( s -> promise.reject(  s ), executorService );
+			
+			return promise.future();
 		}
 		
-		protected BlockingQueue<FunctionExecutorPojo<FunctionApply<T>>> getOnSuccesfulQueue() {
+		protected BlockingQueue<FunctionExecutorPojo<FunctionCallBack<T>>> getOnSuccesfulQueue() {
 			
 			return onSuccesfulQueue;
 		
 		}
 
-		protected BlockingQueue<FunctionExecutorPojo<FunctionApply<Throwable>>> getOnFailure() {
+		protected BlockingQueue<FunctionExecutorPojo<FunctionCallBack<Throwable>>> getOnFailure() {
 			
 			return onFailureQueue;
 		

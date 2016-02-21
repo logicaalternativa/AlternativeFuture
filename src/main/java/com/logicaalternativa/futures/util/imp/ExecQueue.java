@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.logicaalternativa.futures.FunctionApply;
+import com.logicaalternativa.futures.FunctionCallBack;
 import com.logicaalternativa.futures.util.FunctionExecutorPojo;
 import com.logicaalternativa.futures.util.IExecQueue;
 import com.logicaalternativa.futures.util.IManageQueue;
@@ -58,12 +58,12 @@ public class ExecQueue implements IExecQueue {
 	
 	@Override
 	public <E>  void executeQueue(
-			final BlockingQueue<FunctionExecutorPojo<FunctionApply<E>>> onSuccesfulQueue, final E value, final IManageQueue iManageQueue) {
+			final BlockingQueue<FunctionExecutorPojo<FunctionCallBack<E>>> onSuccesfulQueue, final E value, final IManageQueue iManageQueue) {
 		
 		while ( onSuccesfulQueue != null
 				&& ! onSuccesfulQueue.isEmpty() ) {
 			
-			FunctionExecutorPojo<FunctionApply<E>> fuctionPojo = iManageQueue.takeOfQueue( onSuccesfulQueue );
+			FunctionExecutorPojo<FunctionCallBack<E>> fuctionPojo = iManageQueue.takeOfQueue( onSuccesfulQueue );
 				
 			if ( fuctionPojo != null ) {
 				
@@ -76,7 +76,7 @@ public class ExecQueue implements IExecQueue {
 	}
 	
 	private <E> void executeFucntionApply (
-			final FunctionApply<E> functionApply, final E value, ExecutorService executorService) {
+			final FunctionCallBack<E> functionApply, final E value, ExecutorService executorService) {
 		
 		
 			executorService.execute( () -> {
