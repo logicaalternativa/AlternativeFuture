@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.logicaalternativa.futures.FunctionCallBack;
-import com.logicaalternativa.futures.util.FunctionExecutorPojo;
+import com.logicaalternativa.futures.pojo.FunctionExecutorPojo;
 import com.logicaalternativa.futures.util.IExecQueue;
 import com.logicaalternativa.futures.util.IManageQueue;
 

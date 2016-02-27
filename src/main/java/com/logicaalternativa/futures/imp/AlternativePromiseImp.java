@@ -31,7 +31,7 @@ import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
 import com.logicaalternativa.futures.FunctionCallBack;
 import com.logicaalternativa.futures.FunctionMapper;
-import com.logicaalternativa.futures.util.FunctionExecutorPojo;
+import com.logicaalternativa.futures.pojo.FunctionExecutorPojo;
 import com.logicaalternativa.futures.util.IExecQueue;
 import com.logicaalternativa.futures.util.IManageQueue;
 import com.logicaalternativa.futures.util.imp.ExecQueue;
@@ -167,7 +167,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 			
 			onSuccesful( s -> promise.resolve( mapper.map( s ) ), executorService );
 			
-			onFailure( s -> promise.reject(  s ), executorService );
+			onFailure( s -> promise.reject( s ), executorService );
 			
 			return promise.future();
 		}

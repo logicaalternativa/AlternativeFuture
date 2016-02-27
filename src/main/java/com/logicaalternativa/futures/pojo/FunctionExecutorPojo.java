@@ -20,7 +20,7 @@
  * 
  * 
  */
-package com.logicaalternativa.futures.util;
+package com.logicaalternativa.futures.pojo;
 
 import java.util.concurrent.ExecutorService;
 

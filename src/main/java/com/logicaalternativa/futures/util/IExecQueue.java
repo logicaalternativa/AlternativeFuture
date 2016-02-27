@@ -26,6 +26,7 @@ package com.logicaalternativa.futures.util;
 import java.util.concurrent.BlockingQueue;
 
 import com.logicaalternativa.futures.FunctionCallBack;
+import com.logicaalternativa.futures.pojo.FunctionExecutorPojo;
 
 public interface IExecQueue {
 
