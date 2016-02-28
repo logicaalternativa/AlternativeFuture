@@ -24,6 +24,7 @@ package com.logicaalternativa.futures.imp;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,7 +32,9 @@ import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
 import com.logicaalternativa.futures.FunctionCallBack;
 import com.logicaalternativa.futures.FunctionMapper;
+import com.logicaalternativa.futures.pojo.AlternativeTuple;
 import com.logicaalternativa.futures.pojo.FunctionExecutorPojo;
+import com.logicaalternativa.futures.pojo.imp.AlternativeTupleImp;
 import com.logicaalternativa.futures.util.IExecQueue;
 import com.logicaalternativa.futures.util.IManageQueue;
 import com.logicaalternativa.futures.util.imp.ExecQueue;
@@ -168,6 +171,48 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 			onSuccesful( s -> promise.resolve( mapper.map( s ) ), executorService );
 			
 			onFailure( s -> promise.reject( s ), executorService );
+			
+			return promise.future();
+			
+		}
+
+
+		@Override
+		public <U> AlternativeFuture<AlternativeTuple<T, U>> zip( final AlternativeFuture<U> otherfuture) {
+			
+			final ExecutorService executorService = Executors.newSingleThreadExecutor();
+			
+			final AlternativePromise<AlternativeTuple<T, U>> promise = AlternativeFutures.createPromise();
+			
+			final AtomicBoolean isReject = new AtomicBoolean( false );
+			
+			final FunctionCallBack<Throwable> funOnFailure = s -> {
+				
+				if ( ! isReject.getAndSet( true ) ) {
+					
+					promise.reject( s );			
+					
+				}
+			};
+			
+			final FunctionCallBack<T> funOnSuccesfull = s -> {
+				
+				otherfuture.onSuccesful( t -> {
+						
+							final AlternativeTuple<T, U> res = new AlternativeTupleImp<>( s, t );
+							
+							promise.resolve( res );
+							
+						}
+						, executorService);	
+				
+			};			
+			
+			onSuccesful( funOnSuccesfull, executorService );
+
+			onFailure( funOnFailure, executorService );
+			
+			otherfuture.onFailure( funOnFailure, executorService );
 			
 			return promise.future();
 		}

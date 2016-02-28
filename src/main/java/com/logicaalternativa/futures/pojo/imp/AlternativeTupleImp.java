@@ -1,5 +1,9 @@
+package com.logicaalternativa.futures.pojo.imp;
+
+import com.logicaalternativa.futures.pojo.AlternativeTuple;
+
 /*
- * AlternativeFuture.java
+ * AlternativeTupleImp.java
  * 
  * Copyright 2016 Miguel Rafael Esteban Martin <miguel.esteban@logicaalternativa.com>
  * 
@@ -20,19 +24,29 @@
  * 
  * 
  */
-package com.logicaalternativa.futures;
+public class AlternativeTupleImp<A,B> implements AlternativeTuple<A, B> {
+		
+	private A componentA;
+	private B componenteB;
 
-import java.util.concurrent.ExecutorService;
+	public AlternativeTupleImp( final A componentA, final B componenteB) {
+		this.componentA = componentA;
+		this.componenteB = componenteB;
+		
+	}
 
-import com.logicaalternativa.futures.pojo.AlternativeTuple;
-
-public interface AlternativeFuture<T> {
+	@Override
+	public A getA() {
+		
+		return componentA;
 	
-	abstract void onSuccesful( final FunctionCallBack<T> function, final ExecutorService executorService );
+	}
+
+	@Override
+	public B getB() {
+		
+		return componenteB;
 	
-	abstract void onFailure ( final FunctionCallBack<Throwable> function, final ExecutorService executorService );
+	}
 
-	abstract <U> AlternativeFuture<U> map( final FunctionMapper<T, U> mapper, final ExecutorService executorService );
-
-	abstract <U> AlternativeFuture<AlternativeTuple<T, U>> zip( final AlternativeFuture<U> otherfuture );
 }

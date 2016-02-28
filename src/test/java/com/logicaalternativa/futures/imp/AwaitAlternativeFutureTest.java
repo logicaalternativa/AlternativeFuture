@@ -44,7 +44,7 @@ public class AwaitAlternativeFutureTest {
 			
 			AwaitAlternativeFuture.result( null, TIMEOUT_MILISECONDS );
 			
-			fail("You don't be here");
+			fail("You mustn't to be here!");
 		
 		} catch (IllegalArgumentException e) {
 			
@@ -66,7 +66,7 @@ public class AwaitAlternativeFutureTest {
 			
 			AwaitAlternativeFuture.result( myFuture, null );
 
-			fail("You don't be here");
+			fail("You mustn't to be here!");
 		
 		} catch (IllegalArgumentException e) {
 			
@@ -87,7 +87,7 @@ public class AwaitAlternativeFutureTest {
 			
 			AwaitAlternativeFuture.result( myFuture, -100L );
 			
-			fail("You don't be here");
+			fail("You mustn't to be here!");
 		
 		} catch (IllegalArgumentException e) {
 			
@@ -121,7 +121,7 @@ public class AwaitAlternativeFutureTest {
 			
 			AwaitAlternativeFuture.result( myFuture, TIMEOUT_MILISECONDS );
 			
-			fail( "You don't have to be here" );
+			fail( "You mustn't to be here!" );
 			
 		} catch (Exception e1) {
 			
@@ -142,7 +142,7 @@ public class AwaitAlternativeFutureTest {
 			
 			AwaitAlternativeFuture.result( myFuture, TIMEOUT_MILISECONDS );
 			
-			fail( "You don't have to be here" );
+			fail( "You mustn't to be here!" );
 			
 		} catch (Exception e1) {
 			
@@ -218,7 +218,7 @@ public class AwaitAlternativeFutureTest {
 			
 			AwaitAlternativeFuture.result( myFuture, TIMEOUT_MILISECONDS );
 			
-			fail("You don't be here");
+			fail("You mustn't to be here!");
 			
 		} catch (TimeoutException e) {
 			

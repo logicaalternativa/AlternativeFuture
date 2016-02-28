@@ -260,7 +260,7 @@ public class AlternativePromiseImpCallbackTest {
 			promise.reject( new Exception("Hello world!") );
 			promise.reject( new Exception("Hello world2!") );
 			
-			fail ( "You don't have to be here!" );
+			fail ( "You mustn't to be here!" );
 			
 		} catch (IllegalStateException e) {
 			
@@ -278,7 +278,7 @@ public class AlternativePromiseImpCallbackTest {
 			promise.resolve("Hola Mundo");
 			promise.resolve("Hola Mundo2");
 			
-			fail ( "You don't have to be here!" );
+			fail ( "You mustn't to be here!" );
 			
 		} catch (IllegalStateException e) {
 			
@@ -294,7 +294,7 @@ public class AlternativePromiseImpCallbackTest {
 			promise.resolve("Hola Mundo");
 			promise.reject( new Exception("Hello world!") );
 			
-			fail ( "You don't have to be here!" );
+			fail ( "You mustn't to be here!" );
 			
 		} catch (IllegalStateException e) {
 			

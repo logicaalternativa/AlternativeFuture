@@ -1,5 +1,5 @@
 /*
- * AlternativeFuture.java
+ * AlternativeTuple.java
  * 
  * Copyright 2016 Miguel Rafael Esteban Martin <miguel.esteban@logicaalternativa.com>
  * 
@@ -20,19 +20,12 @@
  * 
  * 
  */
-package com.logicaalternativa.futures;
+package com.logicaalternativa.futures.pojo;
 
-import java.util.concurrent.ExecutorService;
+public interface AlternativeTuple<A, B> {
 
-import com.logicaalternativa.futures.pojo.AlternativeTuple;
+	A getA();
 
-public interface AlternativeFuture<T> {
-	
-	abstract void onSuccesful( final FunctionCallBack<T> function, final ExecutorService executorService );
-	
-	abstract void onFailure ( final FunctionCallBack<Throwable> function, final ExecutorService executorService );
+	B getB();
 
-	abstract <U> AlternativeFuture<U> map( final FunctionMapper<T, U> mapper, final ExecutorService executorService );
-
-	abstract <U> AlternativeFuture<AlternativeTuple<T, U>> zip( final AlternativeFuture<U> otherfuture );
 }
