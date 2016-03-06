@@ -22,6 +22,8 @@
  */
 package com.logicaalternativa.futures;
 
+import com.logicaalternativa.futures.imp.AlternativePromiseImp;
+
 public interface AlternativePromise<T> {
 
 	public void reject( Throwable error );
@@ -29,5 +31,31 @@ public interface AlternativePromise<T> {
 	public void resolve(T value);
 	
 	public AlternativeFuture<T> future();
+	
+	public static <V> AlternativePromise<V> createPromise() {
+		
+		return new AlternativePromiseImp<V>();
+		
+	}
+	
+	public static <T> AlternativeFuture<T> successful( T value ) {
+		
+		AlternativePromise<T> promise = createPromise();
+		
+		promise.resolve( value );
+		
+		return promise.future();
+		
+	}
+	
+	public static <T> AlternativeFuture<T> failed( Throwable error ) {
+		
+		AlternativePromise<T> promise = createPromise();
+		
+		promise.reject( error );
+		
+		return promise.future();
+		
+	}
 	
 }

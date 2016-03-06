@@ -23,7 +23,8 @@
 
 package com.logicaalternativa.futures.imp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -45,9 +46,9 @@ public class AlternativePromiseImpZipTest {
 		
 		// GIVEN
 		
-		final AlternativeFuture<String> futureString = AlternativeFutures.successful( RES_STRING );
+		final AlternativeFuture<String> futureString = AlternativeFuture.successful( RES_STRING );
 		
-		final AlternativeFuture<Integer> futureInteger = AlternativeFutures.successful( RES_INT );
+		final AlternativeFuture<Integer> futureInteger = AlternativeFuture.successful( RES_INT );
 		
 		// WHEN
 		
@@ -68,9 +69,9 @@ public class AlternativePromiseImpZipTest {
 		
 		// GIVEN
 		
-		AlternativePromise<String> promiseString = AlternativeFutures.createPromise();
+		AlternativePromise<String> promiseString = AlternativePromise.createPromise();
 		
-		AlternativePromise<Integer> promiseInt = AlternativeFutures.createPromise();		
+		AlternativePromise<Integer> promiseInt = AlternativePromise.createPromise();		
 		
 		resolveNewThreadPromise( promiseInt, RES_INT, 80L );
 		
@@ -99,9 +100,9 @@ public class AlternativePromiseImpZipTest {
 		
 		// GIVEN
 		
-		AlternativePromise<String> promiseString = AlternativeFutures.createPromise();
+		AlternativePromise<String> promiseString = AlternativePromise.createPromise();
 		
-		AlternativePromise<Integer> promiseInt = AlternativeFutures.createPromise();		
+		AlternativePromise<Integer> promiseInt = AlternativePromise.createPromise();		
 		
 		resolveNewThreadPromise( promiseInt, RES_INT, 50L );
 		
@@ -131,9 +132,9 @@ public class AlternativePromiseImpZipTest {
 		
 		// GIVEN
 		
-		AlternativeFuture<String> futureString = AlternativeFutures.successful( RES_STRING );
+		AlternativeFuture<String> futureString = AlternativeFuture.successful( RES_STRING );
 		
-		AlternativeFuture<Integer> futureInteger = AlternativeFutures.failed( RES_EXCEPTION );
+		AlternativeFuture<Integer> futureInteger = AlternativeFuture.failed( RES_EXCEPTION );
 		
 		// WHEN
 
@@ -160,9 +161,9 @@ public class AlternativePromiseImpZipTest {
 		
 		// GIVEN
 		
-		final AlternativePromise<String> promiseString = AlternativeFutures.createPromise();
+		final AlternativePromise<String> promiseString = AlternativePromise.createPromise();
 		
-		final AlternativePromise<Integer> promiseInt = AlternativeFutures.createPromise();		
+		final AlternativePromise<Integer> promiseInt = AlternativePromise.createPromise();		
 		
 		resolveNewThreadPromise( promiseString, RES_STRING, 100L );
 		
@@ -196,9 +197,9 @@ public class AlternativePromiseImpZipTest {
 		
 		// GIVEN
 		
-		final AlternativeFuture<String> futureString = AlternativeFutures.failed( RES_EXCEPTION );
+		final AlternativeFuture<String> futureString = AlternativeFuture.failed( RES_EXCEPTION );
 		
-		final AlternativeFuture<Integer> futureInteger = AlternativeFutures.successful( RES_INT );
+		final AlternativeFuture<Integer> futureInteger = AlternativeFuture.successful( RES_INT );
 		
 		// WHEN 
 
@@ -217,9 +218,7 @@ public class AlternativePromiseImpZipTest {
 			assertEquals( RES_EXCEPTION, e );
 		}
 		
-	}
-	
-	
+	}	
 	
 	
 	@Test
@@ -227,9 +226,9 @@ public class AlternativePromiseImpZipTest {
 		
 		// GIVEN
 		
-		final AlternativePromise<String> promiseString = AlternativeFutures.createPromise();
+		final AlternativePromise<String> promiseString = AlternativePromise.createPromise();
 		
-		final AlternativePromise<Integer> promiseInt = AlternativeFutures.createPromise();		
+		final AlternativePromise<Integer> promiseInt = AlternativePromise.createPromise();		
 		
 		resolveNewThreadPromise( promiseInt, RES_INT, 100L );
 		
@@ -243,15 +242,16 @@ public class AlternativePromiseImpZipTest {
 		
 		final AlternativeFuture<AlternativeTuple<String, Integer>> futureZip = futureString.zip( futureInteger );
 		
+		// THEN 
+		
 		try {
 			
-			AwaitAlternativeFuture.result( futureZip, 80L);
+			AwaitAlternativeFuture.result( futureZip, 90L);
 			
 			fail("You mustn't to be here");
 			
 		} catch (Exception e) {
 			
-			// THEN 
 			
 			assertEquals( RES_EXCEPTION, e );
 		}

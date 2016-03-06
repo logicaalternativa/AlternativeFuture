@@ -166,7 +166,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		public <U> AlternativeFuture<U> map(FunctionMapper<T, U> mapper,
 				ExecutorService executorService) {
 			
-			AlternativePromise<U> promise = AlternativeFutures.createPromise();
+			AlternativePromise<U> promise = AlternativePromise.createPromise();
 			
 			onSuccesful( s -> promise.resolve( mapper.map( s ) ), executorService );
 			
@@ -182,7 +182,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 			
 			final ExecutorService executorService = Executors.newSingleThreadExecutor();
 			
-			final AlternativePromise<AlternativeTuple<T, U>> promise = AlternativeFutures.createPromise();
+			final AlternativePromise<AlternativeTuple<T, U>> promise = AlternativePromise.createPromise();
 			
 			final AtomicBoolean isReject = new AtomicBoolean( false );
 			

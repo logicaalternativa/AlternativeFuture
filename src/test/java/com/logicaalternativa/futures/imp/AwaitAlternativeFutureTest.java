@@ -60,7 +60,7 @@ public class AwaitAlternativeFutureTest {
 		
 		final String myString = "Hello world!";
 		
-		final AlternativeFuture<String> myFuture = AlternativeFutures.successful( myString );
+		final AlternativeFuture<String> myFuture = AlternativeFuture.successful( myString );
 		
 		try {
 			
@@ -81,7 +81,7 @@ public class AwaitAlternativeFutureTest {
 		
 		final String myString = "Hello world!";
 		
-		final AlternativeFuture<String> myFuture = AlternativeFutures.successful( myString );
+		final AlternativeFuture<String> myFuture = AlternativeFuture.successful( myString );
 		
 		try {
 			
@@ -102,7 +102,7 @@ public class AwaitAlternativeFutureTest {
 		
 		final String myString = "Hello world!";
 		
-		final AlternativeFuture<String> myFuture = AlternativeFutures.successful( myString );
+		final AlternativeFuture<String> myFuture = AlternativeFuture.successful( myString );
 		
 		final String result = AwaitAlternativeFuture.result( myFuture, TIMEOUT_MILISECONDS );
 		
@@ -115,7 +115,7 @@ public class AwaitAlternativeFutureTest {
 		
 		final Exception expect  = new Exception ("Houston, we have a problem");
 		
-		final AlternativeFuture<String> myFuture = AlternativeFutures.failed( expect );
+		final AlternativeFuture<String> myFuture = AlternativeFuture.failed( expect );
 		
 		try {
 			
@@ -136,7 +136,7 @@ public class AwaitAlternativeFutureTest {
 		
 		final Throwable expect  = new Throwable ("Houston, we have a problem");
 		
-		final AlternativeFuture<String> myFuture = AlternativeFutures.failed( expect );
+		final AlternativeFuture<String> myFuture = AlternativeFuture.failed( expect );
 		
 		try {
 			
@@ -157,7 +157,7 @@ public class AwaitAlternativeFutureTest {
 		
 		final String myString = "Hello world!";
 		
-		final AlternativePromise<String> myPromise = AlternativeFutures.createPromise();
+		final AlternativePromise<String> myPromise = AlternativePromise.createPromise();
 		
 		( new Thread(){
 			
@@ -192,7 +192,7 @@ public class AwaitAlternativeFutureTest {
 		
 		final String myString = "Hello world!";
 		
-		final AlternativePromise<String> myPromise = AlternativeFutures.createPromise();
+		final AlternativePromise<String> myPromise = AlternativePromise.createPromise();
 		
 		( new Thread(){
 			

@@ -22,7 +22,9 @@
  */
 package com.logicaalternativa.futures.imp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,7 +57,7 @@ public class AlternativePromiseImpCallbackTest {
 		
 		executorService = Executors.newCachedThreadPool();
 		
-		promise = AlternativeFutures.createPromise();
+		promise = AlternativePromise.createPromise();
 
 		threadName = Thread.currentThread().getName();
 		

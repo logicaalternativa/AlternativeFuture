@@ -35,4 +35,24 @@ public interface AlternativeFuture<T> {
 	abstract <U> AlternativeFuture<U> map( final FunctionMapper<T, U> mapper, final ExecutorService executorService );
 
 	abstract <U> AlternativeFuture<AlternativeTuple<T, U>> zip( final AlternativeFuture<U> otherfuture );
+	
+	public static <T> AlternativeFuture<T> successful( T value ) {
+		
+		AlternativePromise<T> promise = AlternativePromise.createPromise();
+		
+		promise.resolve( value );
+		
+		return promise.future();
+		
+	}
+	
+	public static <T> AlternativeFuture<T> failed( Throwable error ) {
+		
+		AlternativePromise<T> promise = AlternativePromise.createPromise();
+		
+		promise.reject( error );
+		
+		return promise.future();
+		
+	}
 }

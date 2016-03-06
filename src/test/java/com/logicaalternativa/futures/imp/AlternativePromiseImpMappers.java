@@ -39,7 +39,7 @@ public class AlternativePromiseImpMappers {
 	@Test
 	public void mapperToOtherFutureOk() throws InterruptedException {
 		
-		AlternativeFuture<String> futureString = AlternativeFutures.successful( "1" );
+		AlternativeFuture<String> futureString = AlternativeFuture.successful( "1" );
 		
 		ExecutorService executorService = Executors.newCachedThreadPool();
 		
@@ -62,7 +62,7 @@ public class AlternativePromiseImpMappers {
 		
 		final Exception expected = new Exception( "Exception test" );
 		
-		AlternativeFuture<String> futureString = AlternativeFutures.failed( expected);
+		AlternativeFuture<String> futureString = AlternativeFuture.failed( expected);
 		
 		ExecutorService executorService = Executors.newCachedThreadPool();
 		
