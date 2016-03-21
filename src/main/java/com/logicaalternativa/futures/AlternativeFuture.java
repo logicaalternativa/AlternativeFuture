@@ -34,6 +34,8 @@ public interface AlternativeFuture<T> {
 
 	abstract <U> AlternativeFuture<U> map( final FunctionMapper<T, U> mapper, final ExecutorService executorService );
 
+	abstract <U> AlternativeFuture<U> andThen( final FunctionMapper<T, AlternativeFuture<U>> mapper, final ExecutorService executorService );
+
 	abstract <U> AlternativeFuture<AlternativeTuple<T, U>> zip( final AlternativeFuture<U> otherfuture );
 	
 	public static <T> AlternativeFuture<T> successful( T value ) {

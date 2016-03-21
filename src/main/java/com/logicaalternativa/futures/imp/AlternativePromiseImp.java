@@ -175,6 +175,30 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 			return promise.future();
 			
 		}
+		
+
+
+		@Override
+		public <U> AlternativeFuture<U> andThen( 
+				FunctionMapper<T, AlternativeFuture<U>> mapper,
+				ExecutorService executorService) {
+			
+			final AlternativePromise<U> promise = AlternativePromise.createPromise();
+			
+			final FunctionCallBack<Throwable> funOnFailure = t -> promise.reject( t );
+			
+			onSuccesful( s -> { 
+							
+							final AlternativeFuture<U> map = mapper.map( s ); 							
+							map.onSuccesful(t  -> promise.resolve(t), executorService);
+							map.onFailure( funOnFailure, executorService);
+							
+			}, executorService );
+			
+			onFailure( funOnFailure, executorService);
+			
+			return promise.future();
+		}
 
 
 		@Override

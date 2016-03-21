@@ -1,5 +1,5 @@
 /*
- * AlternativePromiseImpMappers.java.java
+ * AlternativePromiseImpZipTest.java
  * 
  * Copyright 2016 Miguel Rafael Esteban Martin <miguel.esteban@logicaalternativa.com>
  * 

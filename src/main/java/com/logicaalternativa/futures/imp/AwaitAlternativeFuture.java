@@ -88,7 +88,7 @@ public class AwaitAlternativeFuture<T>  {
 			
 			final ExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 			
-			future.onSuccesful( s -> { isExecuted.set( true );result.set(s); sendSignal(); } , executor );
+			future.onSuccesful( s -> { isExecuted.set( true ); result.set(s); sendSignal(); } , executor );
 			
 			future.onFailure( s -> { throwableReferemce.set(s); sendSignal(); } , executor );
 			
