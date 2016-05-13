@@ -22,19 +22,19 @@
  */
 package com.logicaalternativa.futures;
 
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 
 import com.logicaalternativa.futures.pojo.AlternativeTuple;
 
-public interface AlternativeFuture<T> {
+public interface AlternativeFuture<T> extends Monad<T>{
 	
-	abstract void onSuccesful( final FunctionCallBack<T> function, final ExecutorService executorService );
+	abstract void onSuccesful( final FunctionCallBack<T> function, final Executor executor );
 	
-	abstract void onFailure ( final FunctionCallBack<Throwable> function, final ExecutorService executorService );
+	abstract void onFailure ( final FunctionCallBack<Throwable> function, final Executor executor );
 
-	abstract <U> AlternativeFuture<U> map( final FunctionMapper<T, U> mapper, final ExecutorService executorService );
+	abstract <U> AlternativeFuture<U> map( final FunctionMapper<T, U> mapper, final Executor executor );
 
-	abstract <U> AlternativeFuture<U> andThen( final FunctionMapper<T, AlternativeFuture<U>> mapper, final ExecutorService executorService );
+	abstract <U> AlternativeFuture<U> flatMap( final FunctionMapper<T, AlternativeFuture<U>> mapper, final Executor executor );
 
 	abstract <U> AlternativeFuture<AlternativeTuple<T, U>> zip( final AlternativeFuture<U> otherfuture );
 	

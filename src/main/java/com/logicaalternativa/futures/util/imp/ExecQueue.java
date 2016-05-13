@@ -23,7 +23,7 @@
 package com.logicaalternativa.futures.util.imp;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +67,7 @@ public class ExecQueue implements IExecQueue {
 				
 			if ( fuctionPojo != null ) {
 				
-				executeFucntionApply( fuctionPojo.getFunction(), value, fuctionPojo.getExecutorService());
+				executeFucntionApply( fuctionPojo.getFunction(), value, fuctionPojo.getExecutor() );
 				
 			}
 			
@@ -76,10 +76,10 @@ public class ExecQueue implements IExecQueue {
 	}
 	
 	private <E> void executeFucntionApply (
-			final FunctionCallBack<E> functionApply, final E value, ExecutorService executorService) {
+			final FunctionCallBack<E> functionApply, final E value, Executor executor) {
 		
 		
-			executorService.execute( () -> {
+			executor.execute( () -> {
 		
 				try {
 					

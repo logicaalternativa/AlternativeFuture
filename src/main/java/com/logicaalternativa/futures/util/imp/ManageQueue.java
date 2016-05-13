@@ -24,7 +24,7 @@
 package com.logicaalternativa.futures.util.imp;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,11 +56,11 @@ public class ManageQueue implements IManageQueue {
 	}
 	
 	@Override
-	public <E> void putOnQueue( BlockingQueue<FunctionExecutorPojo<E>> queue, E element, final ExecutorService executorService) {
+	public <E> void putOnQueue( BlockingQueue<FunctionExecutorPojo<E>> queue, E element, final Executor executor) {
 		
 		try {
 			
-			final FunctionExecutorPojo<E> functionExecutorPojo = new FunctionExecutorPojoImp<E>(element, executorService);
+			final FunctionExecutorPojo<E> functionExecutorPojo = new FunctionExecutorPojoImp<E>(element, executor);
 			
 			queue.put(functionExecutorPojo);
 			
@@ -93,7 +93,7 @@ public class ManageQueue implements IManageQueue {
 
 		private E function;
 		
-		private ExecutorService executorService;
+		private Executor executor;
 		
 		@Override
 		public E getFunction() {
@@ -101,15 +101,15 @@ public class ManageQueue implements IManageQueue {
 		}
 
 		@Override
-		public ExecutorService getExecutorService() {
-			return executorService;
+		public Executor getExecutor() {
+			return executor;
 		}
 
 		public FunctionExecutorPojoImp(E function,
-				ExecutorService executorService) {
+				Executor executor) {
 			super();
 			this.function = function;
-			this.executorService = executorService;
+			this.executor = executor;
 		}
 		
 	}

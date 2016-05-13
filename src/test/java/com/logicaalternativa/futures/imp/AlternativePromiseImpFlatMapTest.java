@@ -33,7 +33,7 @@ import org.junit.Test;
 import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
 
-public class AlternativePromiseImpThenTest {
+public class AlternativePromiseImpFlatMapTest {
 	
 	
 	@Test
@@ -50,7 +50,7 @@ public class AlternativePromiseImpThenTest {
 		// WHEN		
 		
 		final AlternativeFuture<String> res = futureInteger
-			.andThen( s -> { sleep( 50L ); return convertToString(s); }, executorService);
+			.flatMap( s -> { sleep( 50L ); return convertToString(s); }, executorService);
 		
 		// THEN
 		
@@ -76,7 +76,7 @@ public class AlternativePromiseImpThenTest {
 		// WHEN		
 		
 		final AlternativeFuture<String> res = futureInteger
-				.andThen( s -> { 
+				.flatMap( s -> { 
 									sleep( 50L ); 
 									return convertToString( s ); 
 								}
@@ -114,7 +114,7 @@ public class AlternativePromiseImpThenTest {
 		// WHEN		
 		
 		final AlternativeFuture<String> res = futureInteger
-				.andThen( s -> { sleep( 50L ); return returnFailure(expectedException); }, executorService);
+				.flatMap( s -> { sleep( 50L ); return returnFailure(expectedException); }, executorService);
 		
 		// THEN
 		

@@ -23,7 +23,7 @@
 package com.logicaalternativa.futures.imp;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,6 +32,7 @@ import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
 import com.logicaalternativa.futures.FunctionCallBack;
 import com.logicaalternativa.futures.FunctionMapper;
+import com.logicaalternativa.futures.Monad;
 import com.logicaalternativa.futures.pojo.AlternativeTuple;
 import com.logicaalternativa.futures.pojo.FunctionExecutorPojo;
 import com.logicaalternativa.futures.pojo.imp.AlternativeTupleImp;
@@ -144,18 +145,18 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		}
 
 		@Override
-		public void onSuccesful(final FunctionCallBack<T> function, final ExecutorService executorService) {
+		public void onSuccesful(final FunctionCallBack<T> function, final Executor executor) {
 			
-			iManageQueue.putOnQueue(onSuccesfulQueue, function, executorService );
+			iManageQueue.putOnQueue(onSuccesfulQueue, function, executor );
 
 			execQueue(onSuccesfulQueue, value, isResolve.get());
 			
 		}
 		
 		@Override
-		public void onFailure(FunctionCallBack<Throwable>  function, ExecutorService executorService ) {
+		public void onFailure(FunctionCallBack<Throwable>  function, Executor executor ) {
 			
-			iManageQueue.putOnQueue( onFailureQueue, function, executorService );
+			iManageQueue.putOnQueue( onFailureQueue, function, executor );
 			
 			execQueue( onFailureQueue, error, isReject.get() );
 			
@@ -164,13 +165,13 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 
 		@Override
 		public <U> AlternativeFuture<U> map(FunctionMapper<T, U> mapper,
-				ExecutorService executorService) {
+				Executor executor) {
 			
 			AlternativePromise<U> promise = AlternativePromise.createPromise();
 			
-			onSuccesful( s -> promise.resolve( mapper.map( s ) ), executorService );
+			onSuccesful( s -> promise.resolve( mapper.map( s ) ), executor );
 			
-			onFailure( s -> promise.reject( s ), executorService );
+			onFailure( s -> promise.reject( s ), executor );
 			
 			return promise.future();
 			
@@ -179,9 +180,9 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 
 
 		@Override
-		public <U> AlternativeFuture<U> andThen( 
+		public <U> AlternativeFuture<U> flatMap( 
 				FunctionMapper<T, AlternativeFuture<U>> mapper,
-				ExecutorService executorService) {
+				Executor executor) {
 			
 			final AlternativePromise<U> promise = AlternativePromise.createPromise();
 			
@@ -190,12 +191,12 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 			onSuccesful( s -> { 
 							
 							final AlternativeFuture<U> map = mapper.map( s ); 							
-							map.onSuccesful(t  -> promise.resolve(t), executorService);
-							map.onFailure( funOnFailure, executorService);
+							map.onSuccesful(t  -> promise.resolve(t), executor);
+							map.onFailure( funOnFailure, executor);
 							
-			}, executorService );
+			}, executor );
 			
-			onFailure( funOnFailure, executorService);
+			onFailure( funOnFailure, executor);
 			
 			return promise.future();
 		}
@@ -204,7 +205,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		@Override
 		public <U> AlternativeFuture<AlternativeTuple<T, U>> zip( final AlternativeFuture<U> otherfuture) {
 			
-			final ExecutorService executorService = Executors.newSingleThreadExecutor();
+			final Executor executor = Executors.newSingleThreadExecutor();
 			
 			final AlternativePromise<AlternativeTuple<T, U>> promise = AlternativePromise.createPromise();
 			
@@ -228,15 +229,15 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 							promise.resolve( res );
 							
 						}
-						, executorService);	
+						, executor);	
 				
 			};			
 			
-			onSuccesful( funOnSuccesfull, executorService );
+			onSuccesful( funOnSuccesfull, executor );
 
-			onFailure( funOnFailure, executorService );
+			onFailure( funOnFailure, executor );
 			
-			otherfuture.onFailure( funOnFailure, executorService );
+			otherfuture.onFailure( funOnFailure, executor );
 			
 			return promise.future();
 		}
@@ -251,6 +252,29 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 			
 			return onFailureQueue;
 		
+		}
+
+		@Override
+		public <U> Monad<U> map(final FunctionMapper<T, U> mapper) {
+			
+			return map(mapper, Executors.newSingleThreadScheduledExecutor() );
+			
+		}
+
+		@Override
+		public <U> Monad<U> flatMap(final FunctionMapper<T, Monad<U>> mapper) {
+			
+			FunctionMapper<T, AlternativeFuture<U>> newMapper = s -> (AlternativeFuture<U>) mapper.map(s);
+			
+			return flatMap(  newMapper, Executors.newSingleThreadScheduledExecutor() );
+			
+		}
+
+		@Override
+		public <T> Monad<T> pure(final T value) {
+			
+			return AlternativeFuture.successful(value);
+			
 		}
 		
 	}
