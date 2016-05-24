@@ -64,7 +64,7 @@ public class BuilderActiveObject<T> implements IBuilderActiveObject<T> {
 					
 		return ( proxy, method, args ) -> {
 			
-			if ( method.getReturnType().isAssignableFrom(AlternativeFuture.class) ) {
+			if ( AlternativeFuture.class.isAssignableFrom( method.getReturnType() ) ) {
 				
 				return processReturnFuture( implementation, method, args, executor );
 				
@@ -107,8 +107,7 @@ public class BuilderActiveObject<T> implements IBuilderActiveObject<T> {
 	
 	private Runnable runnableReturnVoid( final T implementation, final Method method, final Object[] args ) {
 		
-		return () -> {
-			
+		return () -> {			
 			
             try {            	
             	
