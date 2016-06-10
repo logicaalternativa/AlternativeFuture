@@ -64,6 +64,12 @@ public class BuilderActiveObject<T> implements IBuilderActiveObject<T> {
 					
 		return ( proxy, method, args ) -> {
 			
+			if (  logger.isTraceEnabled() ) {
+				
+				logger.trace( " Return type:  " + method.getReturnType() );
+				
+			}
+			
 			if ( AlternativeFuture.class.isAssignableFrom( method.getReturnType() ) ) {
 				
 				return processReturnFuture( implementation, method, args, executor );

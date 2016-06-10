@@ -38,6 +38,13 @@ public interface AlternativeFuture<T> extends Monad<T>{
 
 	abstract <U> AlternativeFuture<AlternativeTuple<T, U>> zip( final AlternativeFuture<U> otherfuture );
 	
+	abstract <U> AlternativeFuture<U> map( final FunctionMapper<T, U> mapper );
+
+	abstract <U> AlternativeFuture<U> flatMap( final FunctionMapper<T, Monad<U>> mapper );
+	
+	abstract <U> AlternativeFuture<U> pure( U value );
+	
+	
 	public static <T> AlternativeFuture<T> successful( T value ) {
 		
 		AlternativePromise<T> promise = AlternativePromise.createPromise();

@@ -255,14 +255,14 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		}
 
 		@Override
-		public <U> Monad<U> map(final FunctionMapper<T, U> mapper) {
+		public <U> AlternativeFuture<U> map(final FunctionMapper<T, U> mapper) {
 			
 			return map(mapper, Executors.newSingleThreadScheduledExecutor() );
 			
 		}
 
 		@Override
-		public <U> Monad<U> flatMap(final FunctionMapper<T, Monad<U>> mapper) {
+		public <U> AlternativeFuture<U> flatMap(final FunctionMapper<T, Monad<U>> mapper) {
 			
 			FunctionMapper<T, AlternativeFuture<U>> newMapper = s -> (AlternativeFuture<U>) mapper.map(s);
 			
@@ -271,7 +271,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		}
 
 		@Override
-		public <T> Monad<T> pure(final T value) {
+		public <U> AlternativeFuture<U> pure(final U value) {
 			
 			return AlternativeFuture.successful(value);
 			
