@@ -24,11 +24,11 @@ package com.logicaalternativa.futures.util.imp;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.logicaalternativa.futures.FunctionCallBack;
 import com.logicaalternativa.futures.pojo.FunctionExecutorPojo;
 import com.logicaalternativa.futures.util.IExecQueue;
 import com.logicaalternativa.futures.util.IManageQueue;
@@ -58,12 +58,12 @@ public class ExecQueue implements IExecQueue {
 	
 	@Override
 	public <E>  void executeQueue(
-			final BlockingQueue<FunctionExecutorPojo<FunctionCallBack<E>>> onSuccesfulQueue, final E value, final IManageQueue iManageQueue) {
+			final BlockingQueue<FunctionExecutorPojo<Consumer<E>>> onSuccesfulQueue, final E value, final IManageQueue iManageQueue) {
 		
 		while ( onSuccesfulQueue != null
 				&& ! onSuccesfulQueue.isEmpty() ) {
 			
-			FunctionExecutorPojo<FunctionCallBack<E>> fuctionPojo = iManageQueue.takeOfQueue( onSuccesfulQueue );
+			FunctionExecutorPojo<Consumer<E>> fuctionPojo = iManageQueue.takeOfQueue( onSuccesfulQueue );
 				
 			if ( fuctionPojo != null ) {
 				
@@ -76,14 +76,14 @@ public class ExecQueue implements IExecQueue {
 	}
 	
 	private <E> void executeFucntionApply (
-			final FunctionCallBack<E> functionApply, final E value, Executor executor) {
+			final Consumer<E> functionApply, final E value, Executor executor) {
 		
 		
 			executor.execute( () -> {
 		
 				try {
 					
-					functionApply.apply(value);
+					functionApply.accept(value);
 					
 				} catch (Exception e) {
 					

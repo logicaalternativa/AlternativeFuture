@@ -24,14 +24,14 @@
 package com.logicaalternativa.futures.util;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.function.Consumer;
 
-import com.logicaalternativa.futures.FunctionCallBack;
 import com.logicaalternativa.futures.pojo.FunctionExecutorPojo;
 
 public interface IExecQueue {
 
 	<E> void executeQueue(
-			BlockingQueue<FunctionExecutorPojo<FunctionCallBack<E>>> onSuccesfulQueue,
+			BlockingQueue<FunctionExecutorPojo<Consumer<E>>> onSuccesfulQueue,
 			E value, IManageQueue iManageQueue);
 
 }

@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
-import com.logicaalternativa.futures.FunctionCallBack;
 
 public class AlternativePromiseImpCallbackTest {
 	
@@ -347,7 +347,7 @@ public class AlternativePromiseImpCallbackTest {
 		
 	}
 
-	private static <E> FunctionCallBack<E> lamdaCheck(final E expected,
+	private static <E> Consumer<E> lamdaCheck(final E expected,
 			final String threadName, final AtomicBoolean isCallingCallback) {
 		
 		return s -> { 

@@ -27,11 +27,11 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.logicaalternativa.futures.AlternativeFuture;
 import com.logicaalternativa.futures.AlternativePromise;
-import com.logicaalternativa.futures.FunctionCallBack;
-import com.logicaalternativa.futures.FunctionMapper;
 import com.logicaalternativa.futures.Monad;
 import com.logicaalternativa.futures.pojo.AlternativeTuple;
 import com.logicaalternativa.futures.pojo.FunctionExecutorPojo;
@@ -120,7 +120,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		
 	}	
 
-	private <E> void execQueue( final BlockingQueue<FunctionExecutorPojo<FunctionCallBack<E>>> fucntionQueue, final E value, boolean isAlreadySetValue ) {
+	private <E> void execQueue( final BlockingQueue<FunctionExecutorPojo<Consumer<E>>> fucntionQueue, final E value, boolean isAlreadySetValue ) {
 		
 		if ( ! isAlreadySetValue ) {
 			
@@ -134,18 +134,18 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 	
 	private class AlternativeFutureImp implements AlternativeFuture<T> {
 		
-		private BlockingQueue<FunctionExecutorPojo<FunctionCallBack<T>>> onSuccesfulQueue;
+		private BlockingQueue<FunctionExecutorPojo<Consumer<T>>> onSuccesfulQueue;
 	
-		private BlockingQueue<FunctionExecutorPojo<FunctionCallBack<Throwable>>> onFailureQueue;
+		private BlockingQueue<FunctionExecutorPojo<Consumer<Throwable>>> onFailureQueue;
 		
 		public AlternativeFutureImp() {
 			super();
-			onSuccesfulQueue = new LinkedBlockingQueue<FunctionExecutorPojo<FunctionCallBack<T>>>();
-			onFailureQueue = new LinkedBlockingQueue<FunctionExecutorPojo<FunctionCallBack<Throwable>>>();
+			onSuccesfulQueue = new LinkedBlockingQueue<FunctionExecutorPojo<Consumer<T>>>();
+			onFailureQueue = new LinkedBlockingQueue<FunctionExecutorPojo<Consumer<Throwable>>>();
 		}
 
 		@Override
-		public void onSuccesful(final FunctionCallBack<T> function, final Executor executor) {
+		public void onSuccesful(final Consumer<T> function, final Executor executor) {
 			
 			iManageQueue.putOnQueue(onSuccesfulQueue, function, executor );
 
@@ -154,7 +154,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		}
 		
 		@Override
-		public void onFailure(FunctionCallBack<Throwable>  function, Executor executor ) {
+		public void onFailure(Consumer<Throwable>  function, Executor executor ) {
 			
 			iManageQueue.putOnQueue( onFailureQueue, function, executor );
 			
@@ -164,12 +164,12 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 		}		
 
 		@Override
-		public <U> AlternativeFuture<U> map(FunctionMapper<T, U> mapper,
+		public <U> AlternativeFuture<U> map(Function<T, U> mapper,
 				Executor executor) {
 			
 			AlternativePromise<U> promise = AlternativePromise.createPromise();
 			
-			onSuccesful( s -> promise.resolve( mapper.map( s ) ), executor );
+			onSuccesful( s -> promise.resolve( mapper.apply( s ) ), executor );
 			
 			onFailure( s -> promise.reject( s ), executor );
 			
@@ -181,16 +181,16 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 
 		@Override
 		public <U> AlternativeFuture<U> flatMap( 
-				FunctionMapper<T, AlternativeFuture<U>> mapper,
+				Function<T, AlternativeFuture<U>> mapper,
 				Executor executor) {
 			
 			final AlternativePromise<U> promise = AlternativePromise.createPromise();
 			
-			final FunctionCallBack<Throwable> funOnFailure = t -> promise.reject( t );
+			final Consumer<Throwable> funOnFailure = t -> promise.reject( t );
 			
 			onSuccesful( s -> { 
 							
-							final AlternativeFuture<U> map = mapper.map( s ); 							
+							final AlternativeFuture<U> map = mapper.apply( s ); 							
 							map.onSuccesful(t  -> promise.resolve(t), executor);
 							map.onFailure( funOnFailure, executor);
 							
@@ -211,7 +211,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 			
 			final AtomicBoolean isReject = new AtomicBoolean( false );
 			
-			final FunctionCallBack<Throwable> funOnFailure = s -> {
+			final Consumer<Throwable> funOnFailure = s -> {
 				
 				if ( ! isReject.getAndSet( true ) ) {
 					
@@ -220,7 +220,7 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 				}
 			};
 			
-			final FunctionCallBack<T> funOnSuccesfull = s -> {
+			final Consumer<T> funOnSuccesfull = s -> {
 				
 				otherfuture.onSuccesful( t -> {
 						
@@ -242,29 +242,29 @@ public class AlternativePromiseImp<T> implements AlternativePromise<T>{
 			return promise.future();
 		}
 		
-		protected BlockingQueue<FunctionExecutorPojo<FunctionCallBack<T>>> getOnSuccesfulQueue() {
+		protected BlockingQueue<FunctionExecutorPojo<Consumer<T>>> getOnSuccesfulQueue() {
 			
 			return onSuccesfulQueue;
 		
 		}
 
-		protected BlockingQueue<FunctionExecutorPojo<FunctionCallBack<Throwable>>> getOnFailure() {
+		protected BlockingQueue<FunctionExecutorPojo<Consumer<Throwable>>> getOnFailure() {
 			
 			return onFailureQueue;
 		
 		}
 
 		@Override
-		public <U> AlternativeFuture<U> map(final FunctionMapper<T, U> mapper) {
+		public <U> AlternativeFuture<U> map(final Function<T, U> mapper) {
 			
 			return map(mapper, Executors.newSingleThreadScheduledExecutor() );
 			
 		}
 
 		@Override
-		public <U> AlternativeFuture<U> flatMap(final FunctionMapper<T, Monad<U>> mapper) {
+		public <U> AlternativeFuture<U> flatMap(final Function<T, Monad<U>> mapper) {
 			
-			FunctionMapper<T, AlternativeFuture<U>> newMapper = s -> (AlternativeFuture<U>) mapper.map(s);
+			Function<T, AlternativeFuture<U>> newMapper = s -> (AlternativeFuture<U>) mapper.apply(s);
 			
 			return flatMap(  newMapper, Executors.newSingleThreadScheduledExecutor() );
 			
